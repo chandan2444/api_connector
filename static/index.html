@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connector Gateway — Premium Admin Dashboard</title>
+    <meta name="description" content="Administration dashboard and API mapping bridge for the API Connector system.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <!-- Background glowing orbs for premium aesthetics -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i data-lucide="shuffle" class="glow-icon"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>API Connector</h1>
+                    <span>BRIDGE & GATEWAY</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-btn active" id="btn-overview" onclick="switchTab('overview')">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard Hub</span>
+                </button>
+                <button class="nav-btn" id="btn-connections" onclick="switchTab('connections')">
+                    <i data-lucide="toy-brick"></i>
+                    <span>Connections</span>
+                </button>
+                <button class="nav-btn" id="btn-wizard" onclick="openWizard()">
+                    <i data-lucide="plus-circle"></i>
+                    <span>Add Integration</span>
+                </button>
+                <button class="nav-btn" id="btn-keys" onclick="switchTab('keys')">
+                    <i data-lucide="key-round"></i>
+                    <span>API Access Keys</span>
+                </button>
+                <button class="nav-btn" id="btn-explorer" onclick="switchTab('explorer')">
+                    <i data-lucide="terminal"></i>
+                    <span>API Explorer</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="server-badge">
+                    <span class="pulse-dot green"></span>
+                    <span class="server-status-text">Gateway Online</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Top Navigation Bar -->
+            <header class="top-bar">
+                <div class="page-title">
+                    <h2 id="current-section-title">Dashboard Overview</h2>
+                    <p id="current-section-subtitle">Real-time status, cache counters, and active integrations.</p>
+                </div>
+                <div class="top-bar-actions">
+                    <div class="key-indicator" onclick="switchTab('keys')">
+                        <i data-lucide="shield-check"></i>
+                        <span id="active-keys-count">0 Keys Active</span>
+                    </div>
+                    <button class="btn btn-secondary btn-icon-only" onclick="refreshAll()" title="Refresh Dashboard">
+                        <i data-lucide="refresh-cw" id="global-refresh-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Sections -->
+            <div class="content-body">
+                
+                <!-- SECTION 1: OVERVIEW -->
+                <section id="sec-overview" class="tab-content active">
+                    <!-- Metric Cards Grid -->
+                    <div class="metrics-grid animate-fade-in">
+                        <div class="metric-card bg-purple">
+                            <div class="metric-header">
+                                <span>TOTAL INTEGRATIONS</span>
+                                <i data-lucide="toy-brick" class="metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="stat-total-conn">0</div>
+                            <div class="metric-footer">
+                                <span id="stat-active-conn" class="green-text">0 Active</span>
+                                <span class="divider">|</span>
+                                <span id="stat-inactive-conn" class="muted-text">0 Inactive</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card bg-blue">
+                            <div class="metric-header">
+                                <span>GATEWAY CACHE</span>
+                                <i data-lucide="database" class="metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="stat-cache-ratio">0%</div>
+                            <div class="metric-footer">
+                                <span id="stat-cache-hits">0 Hits</span>
+                                <span class="divider">|</span>
+                                <span id="stat-cache-misses">0 Misses</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card bg-teal">
+                            <div class="metric-header">
+                                <span>AVERAGE LATENCY</span>
+                                <i data-lucide="zap" class="metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="stat-avg-latency">0ms</div>
+                            <div class="metric-footer">
+                                <span class="green-text">Fast response speed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row Layout for logs & quick health -->
+                    <div class="dashboard-row animate-fade-in delay-1">
+                        <!-- Uptime Check Card -->
+                        <div class="card col-4">
+                            <div class="card-header">
+                                <h3>API Source Performance</h3>
+                                <i data-lucide="trending-up" class="card-header-icon"></i>
+                            </div>
+                            <div class="card-body">
+                                <div id="performance-list" class="performance-list">
+                                    <!-- Populated dynamically -->
+                                    <div class="no-data">Loading performance summaries...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logs list -->
+                        <div class="card col-8">
+                            <div class="card-header">
+                                <h3>Gateway Activity Log</h3>
+                                <div class="badge badge-info" id="logs-count">0 Records</div>
+                            </div>
+                            <div class="card-body scrollable-card-body">
+                                <div class="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Endpoint Source</th>
+                                                <th>Status</th>
+                                                <th>Latency</th>
+                                                <th>Timestamp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="logs-table-body">
+                                            <!-- Dynamic rows -->
+                                            <tr>
+                                                <td colspan="4" class="text-center">Loading logs...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 2: CONNECTIONS -->
+                <section id="sec-connections" class="tab-content">
+                    <div class="action-row animate-fade-in">
+                        <h3>Registered Configurations</h3>
+                        <button class="btn btn-primary" onclick="openWizard()">
+                            <i data-lucide="plus"></i>
+                            <span>Register New Source</span>
+                        </button>
+                    </div>
+
+                    <div class="connections-grid animate-fade-in delay-1" id="connections-grid-container">
+                        <!-- Populated dynamically -->
+                        <div class="no-data">No connections registered. Use the wizard to add one!</div>
+                    </div>
+                </section>
+
+                <!-- SECTION 3: WIZARD / BUILDER MODAL (GLASS FORM) -->
+                <div class="wizard-overlay" id="connection-wizard-modal">
+                    <div class="wizard-modal">
+                        <div class="wizard-header">
+                            <div class="wizard-title-group">
+                                <i data-lucide="toy-brick" class="purple-icon"></i>
+                                <h3 id="wizard-modal-title">New Integration Connection</h3>
+                            </div>
+                            <button class="close-btn" onclick="closeWizard()">&times;</button>
+                        </div>
+                        <div class="wizard-body">
+                            <!-- Side-by-Side Configuration Form and Mappings Visual Tester -->
+                            <div class="wizard-flex">
+                                <!-- Form Config -->
+                                <form id="connection-form" class="wizard-form" onsubmit="saveConnection(event)">
+                                    <input type="hidden" id="form-conn-id" value="">
+                                    
+                                    <div class="form-group">
+                                        <label for="conn-name">Connection Name</label>
+                                        <input type="text" id="conn-name" placeholder="e.g. Coursera Catalog, Remote Jobs Feed" required>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group col-6">
+                                            <label for="conn-category">Data Category</label>
+                                            <select id="conn-category" onchange="loadCategoryDefaults()" required>
+                                                <option value="jobs">Jobs Feed</option>
+                                                <option value="courses">Courses Catalog</option>
+                                                <option value="events">Events List</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-6">
+                                            <label for="conn-method">HTTP Method</label>
+                                            <select id="conn-method" required>
+                                                <option value="GET">GET</option>
+                                                <option value="POST">POST</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="conn-url">Request Endpoint URL</label>
+                                        <input type="url" id="conn-url" placeholder="https://api.website.com/v1/data" required>
+                                        <span class="input-tip">Use <code>http://localhost:8085/api/mock/[jobs|courses|events]</code> to test locally!</span>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group col-6">
+                                            <label for="conn-ttl">Cache Duration (TTL secs)</label>
+                                            <input type="number" id="conn-ttl" value="300" min="0" required>
+                                        </div>
+                                        <div class="form-group col-6">
+                                            <label for="conn-selector">JSON Array Selector</label>
+                                            <input type="text" id="conn-selector" placeholder="e.g. data.results or results">
+                                            <span class="input-tip">Nested path to array. Empty if root.</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="conn-headers">HTTP Custom Headers (JSON)</label>
+                                        <textarea id="conn-headers" placeholder='{"Authorization": "Bearer token", "Accept": "application/json"}'></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="conn-params">Default Query Parameters / POST Body (JSON)</label>
+                                        <textarea id="conn-params" placeholder='{"limit": 20, "page": 1}'></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="conn-mapping">Unified Schema Mapping Rules (JSON)</label>
+                                        <textarea id="conn-mapping" required placeholder='{"title": "raw_title_field"}'></textarea>
+                                        <div class="mapping-helper-box">
+                                            <span class="helper-header">Unified Category Fields:</span>
+                                            <div id="mapping-fields-hint" class="fields-hint">
+                                                <!-- Dynamic based on category selection -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-secondary" onclick="closeWizard()">Cancel</button>
+                                        <button type="button" class="btn btn-info" id="btn-test-mapping" onclick="runLiveMappingTest()">
+                                            <i data-lucide="play"></i> Test Mapping
+                                        </button>
+                                        <button type="submit" class="btn btn-primary" id="btn-save-conn">Save Connection</button>
+                                    </div>
+                                </form>
+
+                                <!-- Live Mapping JSON Visual Tester panel -->
+                                <div class="wizard-preview">
+                                    <div class="preview-header">
+                                        <h4>Live Payload Translator Preview</h4>
+                                        <span class="badge" id="test-latency-badge">Bypassed Cache</span>
+                                    </div>
+                                    
+                                    <div class="preview-flex-container">
+                                        <div class="preview-box">
+                                            <div class="box-title">RAW API RESPONSE</div>
+                                            <pre id="raw-response-preview" class="code-preview">Click "Test Mapping" to fetch live data...</pre>
+                                        </div>
+                                        
+                                        <div class="preview-arrow">
+                                            <i data-lucide="chevrons-down"></i>
+                                            <span>Translating...</span>
+                                        </div>
+
+                                        <div class="preview-box">
+                                            <div class="box-title">NORMALIZED UNIFIED FORMAT</div>
+                                            <pre id="normalized-response-preview" class="code-preview">Fields will map here based on mapping JSON rules...</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: SECURITY KEYS -->
+                <section id="sec-keys" class="tab-content">
+                    <div class="dashboard-row animate-fade-in">
+                        <div class="card col-4">
+                            <div class="card-header">
+                                <h3>Generate Access Token</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-desc-text">
+                                    Create cryptographically secure tokens. External applications must include this token in the header <code>X-API-Key</code> to authenticate against the Unified Gateway endpoints.
+                                </p>
+                                <form id="key-form" onsubmit="generateAPIKey(event)">
+                                    <div class="form-group">
+                                        <label for="key-label">Client App Name / Identifier</label>
+                                        <input type="text" id="key-label" placeholder="e.g. Next.js App Dashboard" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i data-lucide="key"></i> Generate Key
+                                    </button>
+                                </form>
+
+                                <!-- Key Return Reveal Box (Glass alert box) -->
+                                <div id="key-reveal-container" class="reveal-box hide">
+                                    <div class="reveal-header">
+                                        <i data-lucide="alert-triangle"></i>
+                                        <span>Copy key now. It will not be shown again!</span>
+                                    </div>
+                                    <div class="reveal-value-group">
+                                        <input type="text" id="revealed-raw-key" readonly>
+                                        <button class="btn btn-info btn-icon-only" onclick="copyRevealedKey()" title="Copy Key">
+                                            <i data-lucide="copy" id="copy-key-icon"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card col-8">
+                            <div class="card-header">
+                                <h3>Active Access Keys</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Client Identifier</th>
+                                                <th>Key Hash (SHA-256)</th>
+                                                <th>Generated At</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="keys-table-body">
+                                            <tr>
+                                                <td colspan="4" class="text-center">Loading keys...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 5: API EXPLORER -->
+                <section id="sec-explorer" class="tab-content">
+                    <div class="dashboard-row animate-fade-in">
+                        <div class="card col-4">
+                            <div class="card-header">
+                                <h3>Gateway API Controller</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-desc-text">
+                                    Simulate queries to the Unified Aggregated Gateway endpoints to verify responses.
+                                </p>
+                                
+                                <div class="form-group">
+                                    <label for="explorer-api-key">Auth Key Header (X-API-Key)</label>
+                                    <input type="text" id="explorer-api-key" placeholder="Paste your generated API key here" value="connector_dev_secret_key_2026">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="explorer-endpoint">Unified Route Category</label>
+                                    <select id="explorer-endpoint" onchange="updateExplorerTip()">
+                                        <option value="jobs">/api/v1/jobs (Unified Jobs Feed)</option>
+                                        <option value="courses">/api/v1/courses (Unified Courses Feed)</option>
+                                        <option value="events">/api/v1/events (Unified Events Feed)</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary btn-block" onclick="runExplorerQuery()">
+                                    <i data-lucide="send"></i> Execute Query
+                                </button>
+
+                                <div class="curl-box">
+                                    <div class="curl-header">
+                                        <span>CLIENT cURL COMMAND</span>
+                                        <button class="curl-copy-btn" onclick="copyCurlCommand()"><i data-lucide="copy" class="small-icon"></i> Copy</button>
+                                    </div>
+                                    <code id="curl-preview-box">
+                                        curl -H "X-API-Key: connector_dev_secret_key_2026" http://localhost:8085/api/v1/jobs
+                                    </code>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card col-8">
+                            <div class="card-header">
+                                <h3>JSON Output Console</h3>
+                                <div class="console-actions">
+                                    <span class="badge badge-success hide" id="explorer-status-badge">200 OK</span>
+                                    <span class="badge hide" id="explorer-time-badge">0ms</span>
+                                </div>
+                            </div>
+                            <div class="card-body bg-dark-code">
+                                <pre id="explorer-console-output" class="code-console">Run a query to inspect live client outputs...</pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom Confirm Dialog -->
+    <div class="confirm-overlay hide" id="confirm-dialog">
+        <div class="confirm-box">
+            <div class="confirm-icon"><i data-lucide="alert-triangle"></i></div>
+            <h4 id="confirm-title">Are you sure?</h4>
+            <p id="confirm-message">This action cannot be undone.</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="cancelConfirm()">Cancel</button>
+                <button class="btn btn-danger" id="confirm-ok-btn" onclick="confirmOk()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert toast notification -->
+    <div class="toast hide" id="toast-notif">
+        <i data-lucide="info" id="toast-icon"></i>
+        <span id="toast-message">Notification details!</span>
+    </div>
+
+    <!-- Javascripts -->
+    <script src="static/js/app.js"></script>
+</body>
+</html>
